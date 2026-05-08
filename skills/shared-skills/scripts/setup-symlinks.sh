@@ -24,7 +24,7 @@ fi
 
 # 2. Backup existing local skills (if any)
 cd "$SKILLS_DIR"
-SHARED_SKILLS="oracle-sqlcl-dba system-administration system-cleanup firecrawl shared-skills-symlink"
+SHARED_SKILLS="oracle-sqlcl-dba system-administration system-cleanup firecrawl shared-skills"
 
 for skill in $SHARED_SKILLS; do
     if [ -e "$skill" ] && [ ! -L "$skill" ]; then

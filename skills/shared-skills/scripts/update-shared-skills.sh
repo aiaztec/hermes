@@ -19,7 +19,7 @@ echo ""
 echo "🔗 Verifying symlinks..."
 cd ~/.hermes/skills/
 
-for skill in oracle-sqlcl-dba system-administration system-cleanup firecrawl shared-skills-symlink; do
+for skill in oracle-sqlcl-dba system-administration system-cleanup firecrawl shared-skills; do
     if [ -L "$skill" ]; then
         target=$(readlink "$skill")
         if [ -e "$skill" ]; then

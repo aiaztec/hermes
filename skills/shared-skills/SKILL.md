@@ -1,5 +1,5 @@
 ---
-name: shared-skills-symlink
+name: shared-skills
 description: "Shared skills management via symlinks for Hermes Agent. Sync skills from aiaztec/hermes repo using symlinks."
 version: 1.0.0
 author: aiaztec + Hermes-TT
@@ -29,7 +29,7 @@ Symlinks in ~/.hermes/skills/:
   system-administration → ~/repos/aiaztec-hermes/skills/system-administration
   system-cleanup → ~/repos/aiaztec-hermes/skills/system-cleanup
   firecrawl → ~/repos/aiaztec-hermes/skills/firecrawl
-  shared-skills-symlink → ~/repos/aiaztec-hermes/skills/shared-skills-symlink
+  shared-skills → ~/repos/aiaztec-hermes/skills/shared-skills
 ```
 
 ## Prerequisites
@@ -59,7 +59,7 @@ done
 
 # 3. Create symlinks for shared skills
 cd ~/.hermes/skills/
-for skill in oracle-sqlcl-dba system-administration system-cleanup firecrawl shared-skills-symlink; do
+for skill in oracle-sqlcl-dba system-administration system-cleanup firecrawl shared-skills; do
   if [ -e "~/repos/aiaztec-hermes/skills/$skill" ]; then
     ln -sf ~/repos/aiaztec-hermes/skills/$skill $skill
     echo "Symlink: $skill → ~/repos/aiaztec-hermes/skills/$skill"
@@ -137,7 +137,7 @@ cd ~/repos/aiaztec-hermes/ && git pull origin main
 | `system-administration` | aiaztec | Linux system administration tasks |
 | `system-cleanup` | aiaztec | System cleanup procedures |
 | `firecrawl` | Hermes-TT | Web scraping and search via Firecrawl |
-| `shared-skills-symlink` | aiaztec | This skill (shared skills management) |
+| `shared-skills` | aiaztec | This skill (shared skills management) |
 
 ## Adding New Collaborators
 
