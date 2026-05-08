@@ -148,6 +148,43 @@ git push origin improve-oracle-skill
 git push --force origin main  # ONLY after discussion
 ```
 
+## Automatic Skill Sharing (for Hermes Agent)
+
+When Hermes Agent creates a new skill via `skill_manage(action='create')`, it should automatically share it:
+
+### Process:
+1. **Create skill in shared repo:**
+   ```bash
+   # Instead of ~/.hermes/skills/NEW_SKILL/
+   # Create in: ~/repos/aiaztec-hermes/skills/NEW_SKILL/
+   mkdir -p ~/repos/aiaztec-hermes/skills/NEW_SKILL/
+   # ... create SKILL.md, scripts, etc. here
+   ```
+
+2. **Create symlink in Hermes skills directory:**
+   ```bash
+   ln -s ~/repos/aiaztec-hermes/skills/NEW_SKILL ~/.hermes/skills/NEW_SKILL
+   ```
+
+3. **Commit and push immediately:**
+   ```bash
+   cd ~/repos/aiaztec-hermes/
+   git add skills/NEW_SKILL/
+   git commit -m "Add new skill: NEW_SKILL"
+   git push origin main
+   ```
+
+4. **Notify user:**
+   ```bash
+   echo "✅ New skill 'NEW_SKILL' automatically shared to GitHub!"
+   ```
+
+### Implementation Note for Hermes Agent:
+- Before creating any new skill, check if `~/repos/aiaztec-hermes/skills/` exists
+- If yes, create the skill there instead of `~/.hermes/skills/`
+- Always create the symlink back to `~/.hermes/skills/` so Hermes can use it immediately
+- Never create skills only locally - always share to the repo
+
 ## Automation (Optional)
 
 Set up a cron job to automatically pull updates every 30 minutes:
