@@ -150,35 +150,6 @@ nginx: [emerg] socket() [::]:80 failed (97: Address family not supported by prot
    curl -s -o /dev/null -w "HTTP Status: %{http_code}\n" http://localhost:80
    ```
 
-## Nginx Modular Configuration (conf.d/)
-
-User's preferred approach: Store global parameters in `/etc/nginx/conf.d/*.conf` files instead of repeating them in every `server` block. This makes server configs smaller and more maintainable.
-
-### Structure
-```
-/etc/nginx/conf.d/
-├── secure_params.conf   # SSL/TLS, OCSP, HSTS, Server ID (743 bytes)
-├── proxy.conf          # Proxy headers, timeouts (306 bytes)
-├── upstreams.conf     # Upstream definitions (62 bytes)
-├── ratelimit.conf     # Rate limiting zones (64 bytes)
-└── upravy.conf        # Gzip types, other modifications (79 bytes)
-```
-
-### Benefits
-- ✅ No need to repeat SSL/proxy params in every server block
-- ✅ Server configs are smaller and cleaner (e.g., eshop-ssl: 19 lines instead of 30+)
-- ✅ Centralized security settings (easy to update)
-- ✅ Upstream definitions separated (easy backend changes)
-
-### Files Description
-- **secure_params.conf**: SSL protocols (TLS 1.2+1.3), ciphers, DH param, session cache, OCSP stapling, HSTS header, server identification
-- **proxy.conf**: Proxy headers (Host, X-Real-IP, etc.), HTTP version, timeouts
-- **upstreams.conf**: Upstream blocks (e.g., `upstream eshop { server 192.168.0.57; keepalive 32; }`)
-- **ratelimit.conf**: Rate limit zones (e.g., `limit_req_zone $binary_remote_addr zone=general:10m rate=50r/s;`)
-- **upravy.conf**: Gzip types and other modifications
-
-See `references/conf.d/` for the actual file contents.
-
 ## Official Nginx Repository Setup
 
 To install the latest nginx version directly from nginx.org (instead of default Debian repos):
