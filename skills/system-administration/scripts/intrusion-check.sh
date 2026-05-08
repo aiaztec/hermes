@@ -1,69 +1,97 @@
 #!/bin/bash
-# Intrusion Detection Script - Automated security monitoring
-# Sets up cron job to check logs for intrusion attempts daily at 2:00 AM
-# Reports saved to /home/ai/reports/
+# Intrusion detection and security analysis script
+# Analyzes authentication logs and system security status
 
-REPORT_DIR="/home/ai/reports"
-DATE=$(date +%Y%m%d_%H%M%S)
-REPORT_FILE="${REPORT_DIR}/intrusion_report_${DATE}.txt"
+echo "=========================================="
+echo "   SECURITY ANALYSIS REPORT"
+echo "   Generated: $(date '+%Y-%m-%d %H:%M:%S')"
+echo "=========================================="
+echo ""
 
-echo "=== INTRUSION DETECTION REPORT ===" > "$REPORT_FILE"
-echo "Generated: $(date)" >> "$REPORT_FILE"
-echo "" >> "$REPORT_FILE"
+# 1. SSH Authentication Analysis
+echo "--- SSH AUTHENTICATION ANALYSIS ---"
+echo "Recent SSH failed attempts (last 50 lines):"
+sudo journalctl -u sshd --no-pager -n 50 2>/dev/null | grep -E "Failed|Invalid|error" | tail -20 || echo "No recent SSH failures in journalctl"
 
-# 1. Check for failed SSH login attempts (last 24 hours)
-echo "=== FAILED SSH LOGIN ATTEMPTS (last 24h) ===" >> "$REPORT_FILE"
 if [ -f /var/log/auth.log ]; then
-    sudo grep "Failed password" /var/log/auth.log | tail -20 >> "$REPORT_FILE" 2>&1
+    echo ""
+    echo "From /var/log/auth.log (last 20 failures):"
+    sudo grep -E "Failed|Invalid|error" /var/log/auth.log 2>/dev/null | tail -20
 else
-    sudo journalctl -u ssh --since "24 hours ago" | grep -i "failed\|invalid" | tail -20 >> "$REPORT_FILE" 2>&1
+    echo "/var/log/auth.log not available"
 fi
-echo "" >> "$REPORT_FILE"
 
-# 2. Check fail2ban status
-echo "=== FAIL2BAN STATUS ===" >> "$REPORT_FILE"
-if command -v fail2ban-client &> /dev/null; then
-    sudo fail2ban-client status >> "$REPORT_FILE" 2>&1
-    sudo fail2ban-client status sshd >> "$REPORT_FILE" 2>&1
+echo ""
+echo "Successful SSH logins (last 10):"
+sudo journalctl -u sshd --no-pager 2>/dev/null | grep "Accepted" | tail -10 || echo "No recent successful SSH logins"
+
+# 2. Current SSH Connections
+echo ""
+echo "--- ACTIVE SSH CONNECTIONS ---"
+ss -tnp | grep sshd || echo "No active SSH connections"
+
+# 3. Listening Ports (Security Risk Check)
+echo ""
+echo "--- LISTENING PORTS (Security Review) ---"
+ss -tuln | grep LISTEN | sort -k4
+
+# 4. Firewall Status
+echo ""
+echo "--- FIREWALL STATUS ---"
+if command -v ufw &>/dev/null; then
+    sudo ufw status verbose 2>/dev/null || echo "UFW not active"
 else
-    echo "fail2ban not installed" >> "$REPORT_FILE"
+    echo "UFW not installed"
 fi
-echo "" >> "$REPORT_FILE"
 
-# 3. Check UFW blocked attempts (use full path)
-echo "=== UFW BLOCKED ATTEMPTS (last 24h) ===" >> "$REPORT_FILE"
-if [ -x /usr/sbin/ufw ]; then
-    sudo /usr/sbin/ufw status numbered >> "$REPORT_FILE" 2>&1
-    sudo grep -i "block" /var/log/ufw.log 2>/dev/null | tail -20 >> "$REPORT_FILE" 2>&1
+if command -v iptables &>/dev/null; then
+    echo ""
+    echo "IPTables rules (filter table):"
+    sudo iptables -L -n 2>/dev/null | head -30
+fi
+
+# 5. Recent Sudo Usage
+echo ""
+echo "--- RECENT SUDO USAGE ---"
+sudo grep sudo /var/log/auth.log 2>/dev/null | tail -10 || echo "No sudo entries in auth.log"
+
+# 6. Users with Sudo Access
+echo ""
+echo "--- SUDOERS (Users with sudo access) ---"
+grep -E "^[^#].*ALL.*NOPASSWD|^[^#].*sudo" /etc/sudoers 2>/dev/null
+if [ -d /etc/sudoers.d ]; then
+    echo "Additional sudoers files:"
+    ls -la /etc/sudoers.d/ 2>/dev/null
+fi
+
+# 7. Failed Login Attempts by IP (Top attackers)
+echo ""
+echo "--- TOP ATTACKER IPS (from auth.log) ---"
+sudo grep "Failed password" /var/log/auth.log 2>/dev/null | awk '{print $(NF-3)}' | sort | uniq -c | sort -nr | head -10 || echo "No failed password attempts in auth.log"
+
+# 8. System Updates Pending
+echo ""
+echo "--- SYSTEM UPDATES ---"
+if command -v apt &>/dev/null; then
+    UPDATES=$(apt list --upgradable 2>/dev/null | grep -v "Listing" | wc -l)
+    echo "Pending updates: $UPDATES"
+    if [ "$UPDATES" -gt 0 ]; then
+        apt list --upgradable 2>/dev/null | grep -v "Listing" | head -10
+    fi
 else
-    echo "UFW not installed" >> "$REPORT_FILE"
+    echo "APT not available"
 fi
-echo "" >> "$REPORT_FILE"
 
-# 4. Check for suspicious nginx access attempts
-echo "=== NGINX SUSPICIOUS REQUESTS (last 24h) ===" >> "$REPORT_FILE"
-if [ -f /var/log/nginx/access.log ]; then
-    sudo grep -E "union|select|<|>|\\.\\.\\/|\\/etc\\/passwd" /var/log/nginx/access.log 2>/dev/null | tail -20 >> "$REPORT_FILE" 2>&1
-else
-    echo "nginx access log not found" >> "$REPORT_FILE"
-fi
-echo "" >> "$REPORT_FILE"
+# 9. Security Recommendations
+echo ""
+echo "--- SECURITY RECOMMENDATIONS ---"
+echo "1. Disable SSH password auth: 'PasswordAuthentication no' in sshd_config"
+echo "2. Enable firewall: sudo ufw enable"
+echo "3. Install fail2ban: sudo apt install fail2ban"
+echo "4. Keep system updated: sudo apt update && sudo apt upgrade"
+echo "5. Review users with sudo access regularly"
 
-# 5. Check current network connections (top talkers)
-echo "=== TOP IPs CONNECTED (current) ===" >> "$REPORT_FILE"
-sudo ss -tn | awk '{print $5}' | cut -d: -f1 | sort | uniq -c | sort -nr | head -10 >> "$REPORT_FILE" 2>&1
-echo "" >> "$REPORT_FILE"
-
-# 6. System resource check
-echo "=== SYSTEM RESOURCE CHECK ===" >> "$REPORT_FILE"
-echo "Load average: $(uptime | awk -F'load average:' '{print $2}')" >> "$REPORT_FILE"
-echo "Memory usage:" >> "$REPORT_FILE"
-free -h >> "$REPORT_FILE" 2>&1
-echo "" >> "$REPORT_FILE"
-
-echo "=== END OF REPORT ===" >> "$REPORT_FILE"
-
-chown ai:ai "$REPORT_FILE"
-chmod 600 "$REPORT_FILE"
-
-echo "Report saved to: $REPORT_FILE"
+echo ""
+echo "=========================================="
+echo "   END OF SECURITY REPORT"
+echo "=========================================="
