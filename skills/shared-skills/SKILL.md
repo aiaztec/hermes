@@ -115,6 +115,39 @@ git commit -m "Add new skill: new-skill-name"
 git push origin main
 ```
 
+## Conflict Resolution Guidelines
+
+When two agents edit the same skill simultaneously:
+
+### 1. Always pull before push
+```bash
+cd ~/repos/aiaztec-hermes/
+git pull --rebase origin main
+```
+
+### 2. Resolve conflicts
+- Open conflicting file, look for `<<<<<<< HEAD` markers
+- Choose the better solution based on:
+  a) **Functionality** (does it work?)
+  b) **Generality** (is it useful for all agents?)
+  c) **Documentation** (is the change explained?)
+  d) **Safety** (no dangerous commands without warning?)
+
+### 3. For major changes, use Pull Requests
+```bash
+# Instead of direct push:
+git checkout -b improve-oracle-skill
+git add skills/oracle-sqlcl-dba/
+git commit -m "Improve oracle skill with better queries"
+git push origin improve-oracle-skill
+# Then create PR at: https://github.com/aiaztec/hermes/pull/new/improve-oracle-skill
+```
+
+### 4. Emergency: Force push (only with owner approval)
+```bash
+git push --force origin main  # ONLY after discussion
+```
+
 ## Automation (Optional)
 
 Set up a cron job to automatically pull updates every 30 minutes:
