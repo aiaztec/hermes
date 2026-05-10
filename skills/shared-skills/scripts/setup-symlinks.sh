@@ -55,4 +55,4 @@ hermes skills list 2>/dev/null | grep -E "oracle|system|firecrawl|shared-skills"
 
 echo ""
 echo "✅ Setup complete! Symlinked skills:"
-ls -la "$SKILLS_DIR" | grep "^l" | awk '{print $9, "→", $11}'
+ls -la "$SKILLS_DIR" | grep "^l" | awk '{print $9, "->", $11}'

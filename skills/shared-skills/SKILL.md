@@ -1,7 +1,9 @@
 ---
 name: shared-skills
-description: "Shared skills management via symlinks for Hermes Agent. Sync skills from aiaztec/hermes repo using symlinks."
-version: 1.0.0
+description: |
+  Shared skills management via symlinks for Hermes Agent. Sync skills from aiaztec/hermes repo using symlinks.
+  Includes scripts for setup, auto-share, publish, and pull operations.
+version: 2.0.0
 author: aiaztec + Hermes-TT
 license: MIT
 metadata:
@@ -31,6 +33,15 @@ Symlinks in ~/.hermes/skills/:
   firecrawl → ~/repos/aiaztec-hermes/skills/firecrawl
   shared-skills → ~/repos/aiaztec-hermes/skills/shared-skills
 ```
+
+## Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `scripts/setup-symlinks.sh` | Setup shared skills via symlinks (run once per new agent) |
+| `scripts/auto-share-new-skill.sh` | Auto-share new skill to shared repo |
+| `scripts/publish-skill.sh` | Publish local skills to shared GitHub repo |
+| `scripts/pull-skills.sh` | Pull and copy shared skills from GitHub |
 
 ## Prerequisites
 
@@ -70,9 +81,15 @@ done
 hermes skills list | grep -E "oracle-sqlcl-dba|system-administration|system-cleanup|firecrawl|shared-skills"
 ```
 
+Or use the automatic setup script:
+```bash
+cd ~/.hermes/skills/shared-skills/
+bash scripts/setup-symlinks.sh
+```
+
 ## Daily Workflow
 
-### 1. Pull updates from other agents (e.g., Hermes-TT pushed changes)
+### 1. Pull updates from other agents
 
 ```bash
 cd ~/repos/aiaztec-hermes/
@@ -115,6 +132,12 @@ git commit -m "Add new skill: new-skill-name"
 git push origin main
 ```
 
+Or use the automatic share script:
+```bash
+cd ~/.hermes/skills/shared-skills/
+bash scripts/auto-share-new-skill.sh new-skill-name
+```
+
 ## Conflict Resolution Guidelines
 
 When two agents edit the same skill simultaneously:
@@ -150,7 +173,7 @@ git push --force origin main  # ONLY after discussion
 
 ## Automatic Skill Sharing (for Hermes Agent)
 
-When Hermes Agent creates a new skill via `skill_manage(action='create')`, it should automatically share it:
+When Hermes Agent creates a new skill via `skill_manage(action='create')`, it should automatically share it.
 
 ### Process:
 1. **Create skill in shared repo:**
@@ -253,6 +276,10 @@ git pull --rebase origin main
 |--------|---------|
 | Pull updates | `cd ~/repos/aiaztec-hermes/ && git pull origin main` |
 | Push changes | `cd ~/repos/aiaztec-hermes/ && git push origin main` |
+| Setup symlinks | `cd ~/.hermes/skills/shared-skills/ && bash scripts/setup-symlinks.sh` |
+| Auto-share skill | `cd ~/.hermes/skills/shared-skills/ && bash scripts/auto-share-new-skill.sh <NAME>` |
 | Check symlinks | `ls -la ~/.hermes/skills/ \| grep ^l` |
 | List shared skills | `hermes skills list \| grep -E "oracle\|system\|firecrawl\|shared"` |
 | Add collaborator | `gh api repos/aiaztec/hermes/collaborators/USERNAME -X PUT -f permission=push` |
+| Publish skills | `cd ~/shared-skills/ && bash scripts/publish-skill.sh --all-local` |
+| Pull skills | `cd ~/shared-skills/ && bash scripts/pull-skills.sh --all` |
