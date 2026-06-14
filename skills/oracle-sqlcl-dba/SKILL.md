@@ -1,4 +1,27 @@
 ---
+name: oracle
+description: Oracle Database workflow trigger. ALWAYS load the hub-installed db skill first before doing anything else. Never improvise Oracle/SQL/PLSQL/SQLcl/MCP/database work from generic knowledge when this skill is active.
+---
+
+# Oracle Workflow Skill
+
+## Trigger Rule
+**At the start of ANY Oracle-related task**, immediately do:
+```bash
+skill_view(name='db')
+```
+
+This is not optional. It is the first action, before any web search, terminal command, or improvisation.
+
+## Why
+- The `db` skill contains: sqlcl-basics, sqlcl-mcp-server, PL/SQL, performance, security, migrations, agentsafe DB patterns, and 70+ sub-skills.
+- Improvising from web search or generic knowledge produces incorrect syntax, missed security rules, and duplicate work.
+- This skill exists specifically so the failure to load `db` cannot happen by accident.
+
+## Pitfall
+If you catch yourself writing Oracle advice without having read `db` this session, STOP. Reload `db`, then continue.
+
+---
 name: oracle-sqlcl-dba
 description: Správa, audit a optimalizácia Oracle databáz pomocou SQLcl 25.4. Pokrýva pripojenie, administráciu, monitoring výkonu, audit, zálohovanie (Data Pump) a CI/CD.
 ---

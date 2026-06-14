@@ -1,0 +1,67 @@
+# Hermes Gateway - Hardened Systemd Unit
+# Install to: /etc/systemd/system/hermes-gateway.service
+# Then: systemctl daemon-reload && systemctl enable --now hermes-gateway
+
+[Unit]
+Description=Hermes Agent Gateway - Messaging Platform Integration
+Documentation=https://hermes-agent.nousresearch.com/docs
+After=network-online.target
+Wants=network-online.target
+
+# Security: restrict service to user context only
+User=hermes
+Group=hermes
+
+[Service]
+Type=notify
+ExecStart=/home/hermes/.hermes/hermes-agent/venv/bin/python -m hermes_cli.main gateway run
+WorkingDirectory=/home/hermes/.hermes
+Environment="PATH=/home/hermes/.hermes/hermes-agent/venv/bin:/usr/local/bin:/usr/bin:/bin"
+Environment="VIRTUAL_ENV=/home/hermes/.hermes/hermes-agent/venv"
+Environment="HERMES_HOME=/home/hermes/.hermes"
+
+# Restart policy
+Restart=on-failure
+RestartSec=30
+RestartForceExitStatus=75
+
+# Process management
+KillMode=mixed
+KillSignal=SIGTERM
+TimeoutStopSec=120
+
+# Security hardening
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ProtectProc=invisible
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+RestrictNamespaces=yes
+RestrictRealtime=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=yes
+
+# Capabilities - minimal set
+CapabilityBoundingSet=CAP_DAC_OVERRIDE CAP_SETGID CAP_SETUID
+AmbientCapabilities=CAP_DAC_OVERRIDE CAP_SETGID CAP_SETUID
+
+# System call filter
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
+
+# Logging
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hermes-gateway
+
+[Install]
+WantedBy=multi-user.target
